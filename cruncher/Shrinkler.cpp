@@ -45,6 +45,7 @@ void usage() {
 	printf(" -T, --textfile       Print the contents of the given file before decrunching\n");
 	printf(" -f, --flash          Poke into a register (e.g. DFF180) during decrunching\n");
 	printf(" -p, --no-progress    Do not print progress info: no ANSI codes in output\n");
+	printf(" -z, --endian-swap    Write data words in little-endian format (for ARM).\n");
 	printf("\n");
 	exit(0);
 }
@@ -220,6 +221,7 @@ int main2(int argc, const char *argv[]) {
 	StringParameter textfile      ("-T", "--textfile",                             argc, argv, consumed);
 	HexParameter    flash         ("-f", "--flash",                             0, argc, argv, consumed);
 	FlagParameter   no_progress   ("-p", "--no-progress",                          argc, argv, consumed);
+	FlagParameter   endian        ("-z", "--endian-swap",                          argc, argv, consumed);
 
 	vector<const char*> files;
 
@@ -246,6 +248,11 @@ int main2(int argc, const char *argv[]) {
 
 	if (header.seen && !data.seen) {
 		printf("Error: The header option can only be used together with the data option.\n\n");
+		usage();
+	}
+
+	if (endian.seen && !data.seen) {
+		printf("Error: The endian swap option can only be used together with the data option.\n\n");
 		usage();
 	}
 
@@ -328,7 +335,7 @@ int main2(int argc, const char *argv[]) {
 		printf("References discarded:%9d\n\n", edge_factory.max_cleaned_edges);
 
 		printf("Saving file %s...\n\n", outfile);
-		crunched->save(outfile, header.seen);
+		crunched->save(outfile, header.seen, endian.seen);
 
 		printf("Final file size: %d\n\n", crunched->size(header.seen));
 		delete crunched;

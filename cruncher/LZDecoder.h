@@ -23,11 +23,13 @@ class LZDecoder {
 	int parity_mask;
 
 	int decode(int context) const {
-		return decoder->decode(LZEncoder::NUM_SINGLE_CONTEXTS + context);
+		int val = decoder->decode(LZEncoder::NUM_SINGLE_CONTEXTS + context);
+		return val;
 	}
 
 	int decodeNumber(int context_group) const {
-		return decoder->decodeNumber(LZEncoder::NUM_SINGLE_CONTEXTS + (context_group << 8));
+		int number = decoder->decodeNumber(LZEncoder::NUM_SINGLE_CONTEXTS + (context_group << 8));
+		return number;
 	}
 
 public:
@@ -41,6 +43,7 @@ public:
 		int pos = 0;
 		int offset = 0;
 		do {
+			// printf("ref=%d prev_was_ref=%d pos=%d offset=%d\n", ref, prev_was_ref, pos, offset);
 			if (ref) {
 				bool repeated = false;
 				if (!prev_was_ref) {
@@ -52,6 +55,7 @@ public:
 				}
 				int length = decodeNumber(LZEncoder::CONTEXT_GROUP_LENGTH);
 				if (!receiver.receiveReference(offset, length)) return false;
+				// printf("ref: repeated=%d offset=%d length=%d\n", repeated, offset, length);
 				pos += length;
 				prev_was_ref = true;
 			} else {
@@ -63,6 +67,7 @@ public:
 				}
 				unsigned char lit = context;
 				if (!receiver.receiveLiteral(lit)) return false;
+				// printf("lit: 0x%02x\n", lit);
 				pos += 1;
 				prev_was_ref = false;
 			}

@@ -96,6 +96,15 @@ class DataFile {
 		return verifier.front_overlap_margin + pack_buffer.size() - data.size();
 	}
 
+	static void swap_bytes(const void *src, void *dst, int num_bytes) {
+		assert(src!=dst);
+		const char *p_src = (const char *)src;
+		char *p_dst = (char *)dst;
+		for(int i=0; i<num_bytes; i++) {
+			p_dst[num_bytes-i-1] = p_src[i];
+		}
+	}
+
 public:
 	void load(const char *filename) {
 		FILE *file;
@@ -114,13 +123,42 @@ public:
 		exit(1);
 	}
 
-	void save(const char *filename, bool write_header) {
+	void save(const char *filename, bool write_header, bool endian_swap) {
 		FILE *file;
 		if ((file = fopen(filename, "wb"))) {
 			bool ok = true;
+
+			if (endian_swap) {
+				if (write_header) {
+					DataHeader new_header(header);
+
+					swap_bytes(&header.header_size, &new_header.header_size, 2);
+					swap_bytes(&header.compressed_size, &new_header.compressed_size, 4);
+					swap_bytes(&header.uncompressed_size, &new_header.uncompressed_size, 4);
+					swap_bytes(&header.safety_margin, &new_header.safety_margin, 4);
+					swap_bytes(&header.flags, &new_header.flags, 4);
+					
+					ok = fwrite(&new_header, 1, sizeof(DataHeader), file) == sizeof(DataHeader);
+				}
+
+				vector<unsigned char> new_data;
+				for(int i=0; i < (data.size()+3); i+=4) {
+					new_data.push_back((i+3)>=data.size() ? 0 : data[i+3]);
+					new_data.push_back((i+2)>=data.size() ? 0 : data[i+2]);
+					new_data.push_back((i+1)>=data.size() ? 0 : data[i+1]);
+					new_data.push_back((i+0)>=data.size() ? 0 : data[i+0]);
+				}
+
+				if (ok && fwrite(&new_data[0], 1, new_data.size(), file) == new_data.size()) {
+					fclose(file);
+					return;
+				}
+			}
+
 			if (write_header) {
 				ok = fwrite(&header, 1, sizeof(DataHeader), file) == sizeof(DataHeader);
 			}
+
 			if (ok && fwrite(&data[0], 1, data.size(), file) == data.size()) {
 				fclose(file);
 				return;
