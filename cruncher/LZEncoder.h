@@ -74,15 +74,15 @@ class LZState {
 
 class LZEncoder {
 	static const int NUM_SINGLE_CONTEXTS = 1;
-	static const int NUM_CONTEXT_GROUPS = 4;
+	static const int NUM_CONTEXT_GROUPS = 6;
 	static const int CONTEXT_GROUP_SIZE = 256;
 
 	static const int CONTEXT_KIND = 0;
 	static const int CONTEXT_REPEATED = -1;
 
 	static const int CONTEXT_GROUP_LIT = 0;
-	static const int CONTEXT_GROUP_OFFSET = 2;
-	static const int CONTEXT_GROUP_LENGTH = 3;
+	static const int CONTEXT_GROUP_OFFSET = 4;
+	static const int CONTEXT_GROUP_LENGTH = 5;
 
 	Coder *coder;
 	int parity_mask;
@@ -105,7 +105,7 @@ public:
 	static const int NUMBER_CONTEXT_OFFSET = (NUM_SINGLE_CONTEXTS + CONTEXT_GROUP_OFFSET * CONTEXT_GROUP_SIZE);
 	static const int NUM_NUMBER_CONTEXTS = 2;
 
-	LZEncoder(Coder *coder, bool parity_context) : coder(coder), parity_mask(parity_context ? 1 : 0) {
+	LZEncoder(Coder *coder, bool parity_context) : coder(coder), parity_mask(parity_context ? 3 : 0) {
 
 	}
 
